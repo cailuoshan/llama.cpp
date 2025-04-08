@@ -1,6 +1,16 @@
 #define _CRT_SECURE_NO_DEPRECATE // Disables "unsafe" warnings on Windows
 #define _USE_MATH_DEFINES // For M_PI on MSVC
 
+#define NOTIFY_INST_START 0x103
+#define PRINT_INST_CNT 0x104
+void nemu_signal(int a){
+	asm volatile ("mv a0, %0\n\t"
+								".insn r 0x6B, 0, 0, x0, x0, x0\n\t"
+								:
+								: "r"(a)
+								: "a0");
+}
+
 #include "ggml-backend-impl.h"
 #include "ggml-backend.h"
 #include "ggml-cpu-traits.h"
@@ -14033,7 +14043,9 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
             } break;
         case GGML_OP_MUL_MAT:
             {
+                nemu_signal(NOTIFY_INST_START);
                 ggml_compute_forward_mul_mat(params, tensor);
+                nemu_signal(PRINT_INST_CNT);
             } break;
         case GGML_OP_MUL_MAT_ID:
             {
