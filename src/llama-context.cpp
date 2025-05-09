@@ -6,10 +6,12 @@
 #include "llama-model.h"
 #include "llama-kv-cache.h"
 
+#include <cstddef>
 #include <cstring>
 #include <stdexcept>
 #include <cinttypes>
 
+#include "host-sync.h"
 //
 // llama_context
 //
@@ -522,6 +524,10 @@ float * llama_context::get_logits_ith(int32_t i) {
         return nullptr;
 #endif
     }
+}
+
+size_t llama_context::get_logits_size() {
+    return logits_size;
 }
 
 float * llama_context::get_embeddings() {
@@ -2408,6 +2414,12 @@ int32_t llama_decode(
     if (ret != 0) {
         LLAMA_LOG_ERROR("%s: failed to decode, ret = %d\n", __func__, ret);
     }
+#ifdef HOST_SYNC
+    //HostSync((void *)ctx->kv_self, );
+    llama_synchronize(ctx);
+    HostSync((void *)(ctx->get_logits()), (uint64_t)(ctx->get_logits_size()) * sizeof(float));
+    
+#endif
 
     return ret;
 }
