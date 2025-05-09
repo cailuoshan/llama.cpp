@@ -52,6 +52,7 @@ struct llama_context {
 
     float * get_logits();
     float * get_logits_ith(int32_t i);
+    size_t  get_logits_size();
 
     float * get_embeddings();
     float * get_embeddings_ith(int32_t i);
