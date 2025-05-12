@@ -15,6 +15,8 @@
 #include "ops.h"
 #include "ggml.h"
 
+#include "host-sync.h"
+
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h> // using malloc.h with MSC/MINGW
 #elif !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__OpenBSD__)
@@ -2850,6 +2852,13 @@ static thread_ret_t ggml_graph_compute_thread(void * data) {
         if (node_n + 1 < cgraph->n_nodes) {
             ggml_barrier(state->threadpool);
         }
+
+#if defined(HOST_SYNC) && defined(CPT_GEN)
+        // thread 0 sync result to slave after barrier for each compute_node
+        if (state->ith == 0 && node->op == GGML_OP_MUL_MAT) {
+            HostSync(node->data, node->ne[0] * node->ne[1] * ggml_type_size(node->type));
+        }
+#endif
     }
 
     ggml_barrier(state->threadpool);
