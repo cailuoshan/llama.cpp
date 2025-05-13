@@ -1,15 +1,29 @@
 #define _CRT_SECURE_NO_DEPRECATE // Disables "unsafe" warnings on Windows
 #define _USE_MATH_DEFINES // For M_PI on MSVC
 
-#define SKIP_ON  0x103
-#define SKIP_OFF 0x104
-void nemu_signal(int a){
-	asm volatile ("mv a0, %0\n\t"
-								".insn r 0x6B, 0, 0, x0, x0, x0\n\t"
-								:
-								: "r"(a)
-								: "a0");
+#define SKIP_ON   0x103
+#define SKIP_OFF  0x104
+#define CHECK_CPT 0x105
+static inline void qemu_signal(int req){
+	asm volatile (
+            "mv a0, %0\n\t"
+		    ".insn r 0x6B, 0, 0, x0, x0, x0\n\t"
+		    :
+		    : "r"(req)
+		    : "a0");
 }
+static inline int check_sync(int req) {
+    int status;
+    asm volatile (
+            "mv a0, %1\n\t"
+            ".insn r 0x6B, 1, 0, x5, a0, x0\n\t"
+            "mv %0, x5\n\t"
+            : "=r"(status)
+            : "r"(req)
+            : "a0", "x5");
+    return status;
+}
+#include "slave-sync.h"
 
 #include "ggml-backend-impl.h"
 #include "ggml-backend.h"
@@ -1835,9 +1849,9 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
             } break;
         case GGML_OP_MUL_MAT:
             {
-                nemu_signal(SKIP_ON);
+                qemu_signal(SKIP_ON);
                 ggml_compute_forward_mul_mat(params, tensor);
-                nemu_signal(SKIP_OFF);
+                qemu_signal(SKIP_OFF);
             } break;
         case GGML_OP_MUL_MAT_ID:
             {
@@ -2862,6 +2876,15 @@ static thread_ret_t ggml_graph_compute_thread(void * data) {
         if (node_n + 1 < cgraph->n_nodes) {
             ggml_barrier(state->threadpool);
         }
+
+#ifdef SLAVE_SYNC
+        // thread 0 sync result from host after barrier for each compute_node
+        if (state->ith == 0 && node->op == GGML_OP_MUL_MAT) {
+            if (check_sync(CHECK_CPT) == 1) {
+                SlaveSync(node->data, node->ne[0] * node->ne[1] * ggml_type_size(node->type));
+            } 
+        }
+#endif
     }
 
     ggml_barrier(state->threadpool);

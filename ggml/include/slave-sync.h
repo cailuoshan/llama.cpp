@@ -27,7 +27,7 @@ SyncInfo init_sync_env() {
 void send_req_to_host(SyncInfo sync_info) {
     char msg[] = "DATA_REQ";
     write(sync_info.virtio_fd, msg, strlen(msg));
-    printf("\nQEMU: Send req to wake up host.\n");
+    // printf("\nQEMU: Send req to wake up host.\n");
 }
 
 void receive_data(SyncInfo sync_info, void *dest_data, size_t data_len) {
@@ -44,7 +44,7 @@ void receive_data(SyncInfo sync_info, void *dest_data, size_t data_len) {
         }
         total_received += received;
     }
-    printf("QEMU: Finish receive %zu bytes data.\n", total_received);
+    // printf("QEMU: Finish receive %zu bytes data.\n", total_received);
 }
 
 void close_sync_env(SyncInfo sync_info) {
