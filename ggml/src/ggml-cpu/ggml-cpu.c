@@ -4,15 +4,7 @@
 #define SKIP_ON   0x103
 #define SKIP_OFF  0x104
 #define CHECK_CPT 0x105
-static inline void qemu_signal(int req){
-	asm volatile (
-            "mv a0, %0\n\t"
-		    ".insn r 0x6B, 0, 0, x0, x0, x0\n\t"
-		    :
-		    : "r"(req)
-		    : "a0");
-}
-static inline int check_sync(int req) {
+static inline int qemu_signal(int req) {
     int status;
     asm volatile (
             "mv a0, %1\n\t"
@@ -2880,7 +2872,7 @@ static thread_ret_t ggml_graph_compute_thread(void * data) {
 #ifdef SLAVE_SYNC
         // thread 0 sync result from host after barrier for each compute_node
         if (state->ith == 0 && node->op == GGML_OP_MUL_MAT) {
-            if (check_sync(CHECK_CPT) == 1) {
+            if (qemu_signal(CHECK_CPT) == 1) {
                 SlaveSync(node->data, node->ne[0] * node->ne[1] * ggml_type_size(node->type));
             } 
         }
