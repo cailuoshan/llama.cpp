@@ -152,6 +152,10 @@ int main(int argc, char ** argv) {
     llama_token new_token_id;
 
     for (int n_pos = 0; n_pos + batch.n_tokens < n_prompt + n_predict; ) {
+        // open sync mode
+        if (n_decode==2) {
+            llama_set_sync_on(ctx, true);
+        }
         // evaluate the current batch with the transformer model
         if (llama_decode(ctx, batch)) {
             fprintf(stderr, "%s : failed to eval, return code %d\n", __func__, 1);

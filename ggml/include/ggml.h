@@ -2187,6 +2187,8 @@ extern "C" {
     GGML_API void                          ggml_threadpool_params_init   (struct ggml_threadpool_params * p, int n_threads);
     GGML_API bool                          ggml_threadpool_params_match  (const struct ggml_threadpool_params * p0, const struct ggml_threadpool_params * p1);
 
+    GGML_API void ggml_set_sync_on(struct ggml_cgraph * cgraph, bool value);
+
 #ifdef  __cplusplus
 }
 #endif

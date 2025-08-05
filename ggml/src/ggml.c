@@ -5939,6 +5939,7 @@ struct ggml_cgraph * ggml_new_graph_custom(struct ggml_context * ctx, size_t siz
         /*.leafs        =*/ leafs_ptr,
         /*.hash_table   =*/ { hash_size, hash_used, hash_keys_ptr },
         /*.order        =*/ GGML_CGRAPH_EVAL_ORDER_LEFT_TO_RIGHT,
+        /*.sync_on      =*/ false,
     };
 
     ggml_hash_set_reset(&cgraph->visited_hash_set);
@@ -5965,6 +5966,7 @@ struct ggml_cgraph ggml_graph_view(struct ggml_cgraph * cgraph0, int i0, int i1)
         /*.leafs            =*/ NULL,
         /*.visited_hash_set =*/ { 0, NULL, NULL },
         /*.order            =*/ cgraph0->order,
+        /*.sync_on          =*/ cgraph0->sync_on,
     };
 
     return cgraph;
@@ -6496,4 +6498,8 @@ bool ggml_threadpool_params_match(const struct ggml_threadpool_params * p0, cons
     if (p0->poll           != p1->poll       )    return false;
     if (p0->strict_cpu     != p1->strict_cpu )    return false;
     return memcmp(p0->cpumask, p1->cpumask, GGML_MAX_N_THREADS) == 0;
+}
+
+void ggml_set_sync_on(struct ggml_cgraph * cgraph, bool value) {
+    cgraph->sync_on = value;
 }

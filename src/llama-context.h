@@ -159,6 +159,8 @@ public:
             ggml_cgraph * gf,
                    bool   batched);
 
+    bool sync_on = false;
+
 private:
     llm_graph_result_ptr graph_build(
             ggml_context * ctx,

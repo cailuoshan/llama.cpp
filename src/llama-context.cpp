@@ -950,6 +950,7 @@ int llama_context::decode(llama_batch & inp_batch) {
         auto res = graph_build(ctx_compute.get(), gf, ubatch, LLM_GRAPH_TYPE_DECODER);
 
         // LLAMA_LOG_INFO("graph build time: %.3f ms (%d nodes, %d leafs)\n", (ggml_time_us() - t_start_us)/1000.0, gf->n_nodes, gf->n_leafs);
+        ggml_set_sync_on(gf, this->sync_on);
 
         ggml_backend_sched_alloc_graph(sched.get(), gf);
 
@@ -2415,13 +2416,23 @@ int32_t llama_decode(
         LLAMA_LOG_ERROR("%s: failed to decode, ret = %d\n", __func__, ret);
     }
 #ifdef HOST_SYNC
-    //HostSync((void *)ctx->kv_self, );
-    llama_synchronize(ctx);
-    HostSync((void *)(ctx->get_logits()), (uint64_t)(ctx->get_logits_size()) * sizeof(float));
+    if (llama_get_sync_on(ctx)) {
+        llama_synchronize(ctx);
+        HostSync((void *)(ctx->get_logits()), (uint64_t)(ctx->get_logits_size()) * sizeof(float));
+    }
     
 #endif
 
     return ret;
+}
+
+// HostSync control
+void llama_set_sync_on(struct llama_context * ctx, bool value) {
+    ctx->sync_on = value;
+}
+
+bool llama_get_sync_on(struct llama_context * ctx) {
+    return ctx->sync_on;
 }
 
 //

@@ -2854,9 +2854,11 @@ static thread_ret_t ggml_graph_compute_thread(void * data) {
         }
 
 #if defined(HOST_SYNC) && defined(CPT_GEN)
-        // thread 0 sync result to slave after barrier for each compute_node
-        if (state->ith == 0 && node->op == GGML_OP_MUL_MAT) {
-            HostSync(node->data, node->ne[0] * node->ne[1] * ggml_type_size(node->type));
+        if (cgraph->sync_on) {
+            // thread 0 sync result to slave after barrier for each compute_node
+            if (state->ith == 0 && node->op == GGML_OP_MUL_MAT) {
+                HostSync(node->data, node->ne[0] * node->ne[1] * ggml_type_size(node->type));
+            }
         }
 #endif
     }

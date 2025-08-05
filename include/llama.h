@@ -1428,6 +1428,10 @@ extern "C" {
     LLAMA_API void                           llama_perf_sampler_print(const struct llama_sampler * chain);
     LLAMA_API void                           llama_perf_sampler_reset(      struct llama_sampler * chain);
 
+    // HostSync control
+    LLAMA_API void llama_set_sync_on(struct llama_context * ctx, bool value);
+    LLAMA_API bool llama_get_sync_on(struct llama_context * ctx);
+
 #ifdef __cplusplus
 }
 #endif
