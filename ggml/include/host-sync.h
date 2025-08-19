@@ -8,7 +8,7 @@
 #include <sys/socket.h> 
 #include <sys/un.h>
 
-#define SOCKET_PATH "/tmp/virtio-serial.sock"
+#define SOCKET_PATH "/tmp/qemu-riscv.sock"
 
 struct SyncInfo {
     int  socket_fd;
