@@ -3,18 +3,18 @@
 
 #define SKIP_ON   0x103
 #define SKIP_OFF  0x104
-#define CHECK_CPT 0x105
-static inline int qemu_signal(int req) {
-    int status;
+#define SYNC      0x105
+
+static inline void qemu_skip(int req_type) {
     asm volatile (
-            "mv a0, %1\n\t"
-            ".insn r 0x6B, 1, 0, x5, a0, x0\n\t"
-            "mv %0, x5\n\t"
-            : "=r"(status)
-            : "r"(req)
-            : "a0", "x5");
-    return status;
+        "mv a0, %0\n\t"
+        ".insn r 0x6B, 1, 0, x0, a0, x0\n\t"
+        :
+        : "r"(req_type)
+        : "a0"
+    );
 }
+
 #include "slave-sync.h"
 
 #include "ggml-backend-impl.h"
@@ -1841,9 +1841,9 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
             } break;
         case GGML_OP_MUL_MAT:
             {
-                qemu_signal(SKIP_ON);
+                qemu_skip(SKIP_ON);
                 ggml_compute_forward_mul_mat(params, tensor);
-                qemu_signal(SKIP_OFF);
+                qemu_skip(SKIP_OFF);
             } break;
         case GGML_OP_MUL_MAT_ID:
             {

@@ -1,7 +1,9 @@
 #define SLAVE_SYNC
 
 #ifdef SLAVE_SYNC
-#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+/* #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
@@ -56,6 +58,27 @@ void SlaveSync(void *dest_data, size_t data_len) {
     send_req_to_host(sync_info);
     receive_data(sync_info, dest_data, data_len);
     close_sync_env(sync_info);
+}*/
+
+#define SYNC      0x105
+
+static inline int qemu_sync(int req_type, uint64_t data_address, uint64_t data_len) {
+    int status;
+    asm volatile (
+        "mv a0, %1\n\t"
+        "mv a1, %2\n\t"
+        "mv a2, %3\n\t"
+        ".insn r 0x6B, 1, 0, x5, a0, x0\n\t"
+        "mv %0, x5\n\t"
+        : "=r"(status)
+        : "r"(req_type), "r"(data_address), "r"(data_len)
+        : "a0", "a1", "a2", "x5"
+    );
+    return status;
+}
+
+void SlaveSync(void *dest_data, size_t data_len) {
+    qemu_sync(SYNC, (uint64_t)dest_data, (uint64_t)data_len);
 }
 
 #endif
