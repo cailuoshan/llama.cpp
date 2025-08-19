@@ -1,5 +1,4 @@
 #define HOST_SYNC
-#define CPT_GEN
 
 #ifdef HOST_SYNC
 #include <stdio.h>

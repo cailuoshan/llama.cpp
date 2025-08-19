@@ -11,7 +11,6 @@
 #include <stdexcept>
 #include <cinttypes>
 
-#include "host-sync.h"
 //
 // llama_context
 //
@@ -2415,13 +2414,6 @@ int32_t llama_decode(
     if (ret != 0) {
         LLAMA_LOG_ERROR("%s: failed to decode, ret = %d\n", __func__, ret);
     }
-#ifdef HOST_SYNC
-    if (llama_get_sync_on(ctx)) {
-        llama_synchronize(ctx);
-        HostSync((void *)(ctx->get_logits()), (uint64_t)(ctx->get_logits_size()) * sizeof(float));
-    }
-    
-#endif
 
     return ret;
 }

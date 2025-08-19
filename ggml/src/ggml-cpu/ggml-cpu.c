@@ -2853,7 +2853,7 @@ static thread_ret_t ggml_graph_compute_thread(void * data) {
             ggml_barrier(state->threadpool);
         }
 
-#if defined(HOST_SYNC) && defined(CPT_GEN)
+#if defined(HOST_SYNC)
         if (cgraph->sync_on) {
             // thread 0 sync result to slave after barrier for each compute_node
             if (state->ith == 0 && node->op == GGML_OP_MUL_MAT) {
